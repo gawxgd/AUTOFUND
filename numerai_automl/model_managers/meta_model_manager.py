@@ -34,7 +34,6 @@ class MetaModelManager:
         self.data_version = data_version
         self.feature_set = feature_set
         self.targets_names_for_base_models = targets_names_for_base_models
-        self.data_manager = DataManager(data_version=data_version, feature_set=feature_set)
         self.features = self.data_manager.get_features()
         self.base_model_manager = BaseModelManager(
             data_version=data_version,

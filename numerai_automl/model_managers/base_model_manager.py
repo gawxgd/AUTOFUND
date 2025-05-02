@@ -71,12 +71,11 @@ class BaseModelManager:
         """Extract prediction column names from DataFrame."""
         return [col for col in data.columns if 'predictions' in col]
 
-    def train_base_models(self) -> None:
+    def train_base_models(self, train_data: pd.DataFrame) -> None:
         """
         Train base models for each specified target using LightGBM.
         Models are stored in self.base_models dictionary.
         """
-        train_data = self.data_manager.load_train_data_for_base_models()
         features_names = self._get_features_names(train_data)
         targets_names = self._get_targets_names(train_data)
 
@@ -233,7 +232,7 @@ class BaseModelManager:
         return self.neutralized_base_model_predictors
 
     
-    def create_predictions_by_base_models(self) -> pd.DataFrame:
+    def create_predictions_by_base_models(self,data_for_creating_predictions: pd.DataFrame) -> pd.DataFrame:
         """
         Create predictions using all base models on the latest tournament data.
         
@@ -241,24 +240,23 @@ class BaseModelManager:
             pd.DataFrame: DataFrame containing the original data plus predictions
                          from each base model in columns named 'predictions_model_{target}'
         """
-        data_for_creating_predictions = self.data_manager.load_data_for_creating_predictions_for_base_models()
         features_names = self._get_features_names(data_for_creating_predictions)
 
         for target in self.targets_names_for_base_models:
             predictions = self.base_models[f"model_{target}"].predict(data_for_creating_predictions[features_names])
             data_for_creating_predictions[f"predictions_model_{target}"] = predictions
 
-        self.data_manager.save_vanila_predictions_by_base_models(data_for_creating_predictions)
         return data_for_creating_predictions
     
 
     def find_neutralization_features_and_proportions_for_base_models(
             self,
+            validation_data: pd.DataFrame,
             metric: str = "mean",
             target_name: str = main_target, 
             number_of_iterations: int = 10, 
             max_number_of_features_to_neutralize: int = 5, 
-            proportions: List[float] = feature_neutralization_proportions
+            proportions: List[float] = feature_neutralization_proportions,
             ) -> Dict:
         """
         Find optimal feature neutralization parameters for each base model.
@@ -278,7 +276,6 @@ class BaseModelManager:
         
         assert metric in ["mean", "std", "sharpe", "max_drawdown"], "The metric is not valid"
         
-        validation_data = self.data_manager.load_vanila_predictions_data_by_base_models()
         features_names = self._get_features_names(validation_data)
         predictions_names = self._get_predictions_names(validation_data)
 
@@ -335,7 +332,7 @@ class BaseModelManager:
 
         return self.neutralization_params
     
-    def create_neutralized_predictions_by_base_models_predictions(self) -> pd.DataFrame:
+    def create_neutralized_predictions_by_base_models_predictions(self, vanila_predictions_data: pd.DataFrame) -> pd.DataFrame:
         """
         Apply feature neutralization to the predictions from base models using stored
         neutralization parameters.
@@ -355,7 +352,6 @@ class BaseModelManager:
         if self.neutralization_params is None:
             raise Exception("Neutralization params do not exist")
         
-        vanila_predictions_data = self.data_manager.load_vanila_predictions_data_by_base_models()
         features_names = self._get_features_names(vanila_predictions_data)
         predictions_names = self._get_predictions_names(vanila_predictions_data)
 

@@ -32,13 +32,10 @@ class EnsembleModelManager:
         """
         self.project_root = get_project_root()
         self.targets_names_for_base_models = targets_names_for_base_models
-        self.data_manager = DataManager(data_version, feature_set)
-
-
-
 
     def find_weighted_ensemble(
             self,
+            train_data: pd.DataFrame,
             metric: str = "mean",
             target_name: str = main_target, 
             number_of_iterations: int = 10, 
@@ -50,8 +47,6 @@ class EnsembleModelManager:
         """
 
         all_neutralized_prediction_features = [f"neutralized_predictions_model_{target_name}" for target_name in self.targets_names_for_base_models]
-
-        train_data = self.data_manager.load_train_data_for_ensembler()
         
         weighted_ensembler = WeightedTargetEnsembler(
             all_neutralized_prediction_features=all_neutralized_prediction_features,
@@ -66,10 +61,8 @@ class EnsembleModelManager:
         self.save_ensemble_model("weighted")
         return weighted_ensembler
     
-    def find_lgbm_ensemble(self, target_name: str = main_target, number_of_iterations: int = 10, cv_folds: int = 5):
+    def find_lgbm_ensemble(self,train_data: pd.DataFrame, target_name: str = main_target, number_of_iterations: int = 10, cv_folds: int = 5):
         all_neutralized_prediction_features = [f"neutralized_predictions_model_{target_name}" for target_name in self.targets_names_for_base_models]
-
-        train_data = self.data_manager.load_train_data_for_ensembler()
 
         lgbm_ensembler = LGBMEnsembler(all_neutralized_prediction_features, target_name=target_name, number_of_iterations=number_of_iterations, cv_folds=cv_folds)
         lgbm_ensembler.find_lgbm_ensemble(train_data)
