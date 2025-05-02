@@ -94,3 +94,7 @@ def download_data(data_version: str):
     downloader = DataDownloader(data_version)
     downloader.download_all_data()
     print("[INFO] Download complete.")   
+
+if __name__ == "__main__":
+    pipeline = MainPipeline(data_version="v5.0", feature_set="medium")
+    pipeline.run()
