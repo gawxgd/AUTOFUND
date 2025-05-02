@@ -8,7 +8,7 @@ from numerai_automl.pipeline.meta_model_pipeline import MetaModelPipeline
 from numerai_automl.raport_manager.raport_manager import RaportManager
 from numerai_automl.scorer.scorer import Scorer
 from numerai_automl.utils.utils import get_project_root
-from base_model_pipeline import BaseModelPipeline
+from numerai_automl.pipeline.base_model_pipeline import BaseModelPipeline
 from numerai_automl.visual.cumsum_cor_plot import CumSumCorPlot
 from numerai_automl.visual.radar_plot import RadarPlot
 
@@ -69,31 +69,28 @@ class MainPipeline:
 
         print("FINISHED GENERATING RAPORT")
 
-def download_data(data_version: str):
-    """
-    Check if required data files exist; if not, download them using DataDownloader.
+    def download_data(self):
+        """
+        Check if required data files exist; if not, download them using DataDownloader.
+        """
+        required_files = ["features.json", "train.parquet", "validation.parquet", "live.parquet"]
+        project_root = get_project_root()
+        data_path = os.path.join(project_root, self.data_version)
 
-    Args:
-        data_version (str): The version of the dataset to work with.
-    """
-    required_files = ["features.json", "train.parquet", "validation.parquet", "live.parquet"]
-    project_root = get_project_root()
-    data_path = os.path.join(project_root, data_version)
+        missing_files = [
+            f for f in required_files
+            if not os.path.exists(os.path.join(data_path, f))
+        ]
 
-    missing_files = [
-        f for f in required_files
-        if not os.path.exists(os.path.join(data_path, f))
-    ]
+        if not missing_files:
+            print(f"[INFO] All required data files for version '{self.data_version}' already exist.")
+            return
 
-    if not missing_files:
-        print(f"[INFO] All required data files for version '{data_version}' already exist.")
-        return
-
-    print(f"[INFO] Missing files detected for version '{data_version}': {missing_files}")
-    print("[INFO] Initiating download of missing data files...")
-    downloader = DataDownloader(data_version)
-    downloader.download_all_data()
-    print("[INFO] Download complete.")   
+        print(f"[INFO] Missing files detected for version '{self.data_version}': {missing_files}")
+        print("[INFO] Initiating download of missing data files...")
+        downloader = DataDownloader(self.data_version)
+        downloader.download_all_data()
+        print("[INFO] Download complete.")   
 
 if __name__ == "__main__":
     pipeline = MainPipeline(data_version="v5.0", feature_set="medium")
