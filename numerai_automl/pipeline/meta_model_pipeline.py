@@ -8,6 +8,7 @@ class MetaModelPipeline:
         self.feature_set = feature_set
         self.data_manager = data_manager
         self.model_manager = MetaModelManager(
+            features=self.data_manager.get_features(),
             feature_set=feature_set,
             targets_names_for_base_models=TARGET_CANDIDATES
         )

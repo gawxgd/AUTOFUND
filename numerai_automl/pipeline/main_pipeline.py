@@ -1,4 +1,5 @@
 import os
+import cloudpickle
 import pandas as pd
 from numerai_automl.config.config import TARGET_CANDIDATES
 from numerai_automl.data_managers.data_downloader import DataDownloader
@@ -22,10 +23,10 @@ class MainPipeline:
     def run(self):
         self.download_data()
         base_model_pipeline = BaseModelPipeline(self.feature_set, self.data_manager)
-        base_model_pipeline.run()
+        # base_model_pipeline.run()
 
         ensemble_model_pipeline = EnsembleModelPipeline(self.feature_set, self.data_manager)
-        ensemble_model_pipeline.run()
+        # ensemble_model_pipeline.run()
 
         meta_model_pipeline = MetaModelPipeline(self.feature_set, self.data_manager)
         X = meta_model_pipeline.run()
@@ -39,8 +40,8 @@ class MainPipeline:
         return_data["predictions_model_meta_lgbm"] = predictor_lgbm(X)
         return_data["predictions_model_omega"] = (return_data[["predictions_model_meta_weighted", "predictions_model_meta_lgbm"]].sum(axis=1)) / 2
 
-        base_models_predictors = BaseModelPipeline.model_manager.load_base_model_predictors()
-        neutralized_base_models_predictors = BaseModelPipeline.load_neutralized_base_model_predictors()
+        base_models_predictors = base_model_pipeline.model_manager.load_base_model_predictors()
+        neutralized_base_models_predictors = base_model_pipeline.model_manager.load_neutralized_base_model_predictors()
 
         for target_name in TARGET_CANDIDATES:
             return_data[f"predictions_model_{target_name}"] = base_models_predictors[f"model_{target_name}"](X)
@@ -94,4 +95,11 @@ class MainPipeline:
 
 if __name__ == "__main__":
     pipeline = MainPipeline(data_version="v5.0", feature_set="medium")
-    pipeline.run()
+
+    with open("main_pipeline.pkl", "wb") as f:
+        cloudpickle.dump(pipeline, f)
+    
+    with open("main_pipeline.pkl", "rb") as f:
+        loaded_pipeline = cloudpickle.load(f)
+    print("cloud pickle works2")
+    loaded_pipeline.run()

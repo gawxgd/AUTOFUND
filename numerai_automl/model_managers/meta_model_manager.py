@@ -27,14 +27,16 @@ class MetaModelManager:
         targets_names_for_base_models (List[str]): List of target names for base models
         main_target (str): Main target for predictions
     """
-    def __init__(self, data_version: str = "v5.0", 
+    def __init__(self, 
+                 features,
+                 data_version: str = "v5.0", 
                  feature_set: str = "small", 
                  targets_names_for_base_models: List[str] = target_candidates,
                  main_target: str = main_target):
         self.data_version = data_version
         self.feature_set = feature_set
         self.targets_names_for_base_models = targets_names_for_base_models
-        self.features = self.data_manager.get_features()
+        self.features = features
         self.base_model_manager = BaseModelManager(
             data_version=data_version,
             feature_set=feature_set,
